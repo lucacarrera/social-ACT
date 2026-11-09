@@ -1,0 +1,77 @@
+name: Pubblica post
+
+on:
+  schedule:
+    # ogni 15 minuti (orari in UTC, gli orari dei post sono comunque in ora italiana)
+    - cron: "4,19,34,49 * * * *"
+  workflow_dispatch:
+    inputs:
+      modalita:
+        description: "Cosa fare"
+        type: choice
+        options: [pubblica, prova, verifica]
+        default: pubblica
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pubblicazione
+  cancel-in-progress: false
+
+jobs:
+  pubblica:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      META_PAGE_TOKEN: ${{ secrets.META_PAGE_TOKEN }}
+      FB_PAGE_ID: ${{ secrets.FB_PAGE_ID }}
+      IG_USER_ID: ${{ secrets.IG_USER_ID }}
+      MODALITA: ${{ inputs.modalita || 'pubblica' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Configura git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Verifica credenziali
+        if: env.MODALITA == 'verifica'
+        run: python social.py verifica
+
+      - name: Prepara immagini Instagram
+        if: env.MODALITA != 'verifica'
+        run: |
+          python social.py prepara
+          git add media/instagram
+          if ! git diff --cached --quiet; then
+            git commit -m "Immagini Instagram preparate"
+            for i in 1 2 3; do git pull --rebase && git push && break; sleep 5; done
+          fi
+          echo "URL_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+
+      - name: Pubblica
+        if: env.MODALITA != 'verifica'
+        run: |
+          if [ "$MODALITA" = "prova" ]; then
+            python social.py pubblica --prova
+          else
+            python social.py pubblica
+          fi
+
+      - name: Salva stato
+        if: always() && env.MODALITA == 'pubblica'
+        run: |
+          git add stato
+          if ! git diff --cached --quiet; then
+            git commit -m "Aggiorna stato pubblicazioni"
+            for i in 1 2 3; do git pull --rebase && git push && break; sleep 5; done
+          fi
