@@ -15,15 +15,4 @@
 # I post usciti si vedono in stato/pubblicati.json. Non serve cancellare i post vecchi.
 
 post:
-  - id: esempio-corso-pasticceria
-    testo: |
-      Aperte le iscrizioni al corso di pasticceria!
-      4 serate per imparare le basi: frolla, choux, creme.
-      Info e iscrizioni in messaggio privato.
-
-      #corsodicucina #pasticceria
-    immagine: locandine/esempio.jpg
-    date:
-      - "2026-11-12 18:00"
-      - "2026-11-19 18:00"
-      - "2026-11-26 12:30"
+ []
