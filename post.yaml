@@ -15,4 +15,12 @@
 # I post usciti si vedono in stato/pubblicati.json. Non serve cancellare i post vecchi.
 
 post:
- []
+  - id: il-cioccolato
+    testo: |
+      Vuoi scoprire i segreti del cioccolato? 🍫
+      Puoi ancora iscriverti al nostro corso di due lezioni, mercoledì 18 e 25 novembre: imparerai le tecniche di base, dal temperaggio alla cristallizzazione fino alla modellazione.
+
+      #cioccolato #corsodicucina #cuochitorino
+    immagine: locandine/il_cioccolato_p45.png
+    date:
+      - "2026-11-11 09:15"
