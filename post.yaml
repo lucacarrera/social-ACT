@@ -46,3 +46,35 @@ post:
       - "2026-11-13 07:30"
       - "2026-11-13 17:30"
       - "2026-11-15 12:00"
+
+  - id: corso-cucina-professionale
+    testo: |
+      Hai sempre sognato di lavorare in una cucina professionale? 🔥
+
+      A gennaio ripartono i nostri Corsi di Cucina Professionale: 9 settimane con le mani in pasta, in brigata, al fianco degli chef dell'Associazione Cuochi Torino.
+
+      Lavori, studi o hai il weekend libero? Abbiamo pensato a tutti, con tre edizioni:
+      ▪️ Pomeridiana: mar e gio 14.00–17.30, dal 26 gennaio
+      ▪️ Serale: lun e mer 19.00–22.30, dal 25 gennaio
+      ▪️ Sabato: 9.00–14.00, dal 23 gennaio
+
+      I posti sono limitati: scrivici o chiamaci per informazioni e iscrizioni
+      📞 335 184 1388 · ✉️ segreteria@cuochitorino.it
+      📍 Via Bogino 17, Torino
+
+      #cucinaprofessionale #diventarecuoco #corsodicucina #Torino #AssociazioneCuochiTorino
+    testo_instagram: |
+      Corso di Cucina Professionale – Gennaio 2027 👨‍🍳
+      9 settimane di pratica in brigata con i nostri chef.
+      Scegli la tua edizione: pomeridiana, serale o sabato.
+
+      Info e iscrizioni: 335 184 1388 · segreteria@cuochitorino.it
+      📍 Via Bogino 17, Torino
+
+      #cucinaprofessionale #corsodicucina #Torino #AssociazioneCuochiTorino
+    immagine: locandine/corso_professionale_2027_B_solo_edizioni_p45.png
+    date:
+      - "2026-11-13 07:30"
+      - "2026-11-15 11:30"
+      - "2026-11-19 16:30"
+
