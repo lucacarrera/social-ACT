@@ -21,13 +21,28 @@ post:
 
       Giovedì 19 e 26 novembre, dalle 19.30 alle 22.30.
 
-      Al temine della lezione ci sarà la degustazione dei piatti preparati.
+      Al termine della lezione ci sarà la degustazione dei piatti preparati.
 
-      Per informazioni o iscrizione contattare la segreteria al n. 335 1841388 o via email all' indirizzo
-      segreteria @cuochitorino.it o visitare la pagina https://cuochitorino.it/product/corso-di-pasta-fresca-e-ripiena/
+      Per informazioni o iscrizione contattare la segreteria al n. 335 1841388 o via email all'indirizzo segreteria@cuochitorino.it o visitare la pagina https://cuochitorino.it/product/corso-di-pasta-fresca-e-ripiena/
     immagine: locandine/la_pasta_fresca_e_la_pasta_ripiena_p45.png
     date:
       - "2026-11-11 14:00"
       - "2026-11-12 07:30"
       - "2026-11-12 18:00"
       - "2026-11-14 12:15"
+
+  - id: cioccolato
+    testo: |
+      Vuoi scoprire i segreti del cioccolato? 🍫
+      Hai ancora pochi giorni per iscriverti al nostro corso di due lezioni, mercoledì 18 e 25 novembre:
+
+      imparerai le tecniche di base, dal temperaggio alla cristallizzazione fino alla modellazione.
+
+      #cioccolato #corsodicucina #cuochitorino
+    immagine: locandine/il_cioccolato_p45.png
+    date:
+      - "2026-11-12 10:30"
+      - "2026-11-12 18:30"
+      - "2026-11-13 07:30"
+      - "2026-11-13 17:30"
+      - "2026-11-15 12:00"
