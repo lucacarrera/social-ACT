@@ -51,6 +51,7 @@ jobs:
         if: env.MODALITA != 'verifica'
         run: |
           python social.py prepara
+          mkdir -p media/instagram
           git add media/instagram
           if ! git diff --cached --quiet; then
             git commit -m "Immagini Instagram preparate"
@@ -70,6 +71,7 @@ jobs:
       - name: Salva stato
         if: always() && env.MODALITA == 'pubblica'
         run: |
+          mkdir -p stato
           git add stato
           if ! git diff --cached --quiet; then
             git commit -m "Aggiorna stato pubblicazioni"
