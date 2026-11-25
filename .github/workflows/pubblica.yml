@@ -9,7 +9,7 @@ on:
       modalita:
         description: "Cosa fare"
         type: choice
-        options: [pubblica, prova, verifica]
+        options: [pubblica, prova, verifica, telegram-id]
         default: pubblica
 
 permissions:
@@ -27,6 +27,8 @@ jobs:
       META_PAGE_TOKEN: ${{ secrets.META_PAGE_TOKEN }}
       FB_PAGE_ID: ${{ secrets.FB_PAGE_ID }}
       IG_USER_ID: ${{ secrets.IG_USER_ID }}
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
       MODALITA: ${{ inputs.modalita || 'pubblica' }}
     steps:
       - uses: actions/checkout@v4
@@ -47,20 +49,24 @@ jobs:
         if: env.MODALITA == 'verifica'
         run: python social.py verifica
 
+      - name: Trova ID Telegram
+        if: env.MODALITA == 'telegram-id'
+        run: python social.py telegram-id
+
       - name: Prepara immagini Instagram
-        if: env.MODALITA != 'verifica'
+        if: env.MODALITA == 'pubblica' || env.MODALITA == 'prova'
         run: |
           python social.py prepara
           mkdir -p media/instagram
           git add media/instagram
           if ! git diff --cached --quiet; then
             git commit -m "Immagini Instagram preparate"
-            for i in 1 2 3; do git pull --rebase && git push && break; sleep 5; done
+            git pull --rebase && git push || { sleep 5; git pull --rebase && git push; }
           fi
           echo "URL_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
 
       - name: Pubblica
-        if: env.MODALITA != 'verifica'
+        if: env.MODALITA == 'pubblica' || env.MODALITA == 'prova'
         run: |
           if [ "$MODALITA" = "prova" ]; then
             python social.py pubblica --prova
@@ -75,5 +81,5 @@ jobs:
           git add stato
           if ! git diff --cached --quiet; then
             git commit -m "Aggiorna stato pubblicazioni"
-            for i in 1 2 3; do git pull --rebase && git push && break; sleep 5; done
+            git pull --rebase && git push || { sleep 5; git pull --rebase && git push; }
           fi
