@@ -1,18 +1,23 @@
 #!/usr/bin/env python3
 """
-Pubblicazione programmata di post (testo + locandina) su Facebook e Instagram.
+Pubblicazione programmata di post (testo + locandina) su Facebook, Instagram e Telegram.
 
 Comandi:
   python social.py controlla        controlla post.yaml (nessuna connessione a Meta)
   python social.py prepara          prepara le immagini nel formato accettato da Instagram
   python social.py pubblica         pubblica i post arrivati all'orario previsto
   python social.py pubblica --prova mostra cosa verrebbe pubblicato, senza pubblicare
-  python social.py verifica         controlla token e collegamento a Pagina e Instagram
+  python social.py verifica         controlla token e collegamento a Pagina, Instagram e Telegram
+  python social.py telegram-id      mostra gli ID dei canali/gruppi Telegram in cui il bot ha ricevuto messaggi
 
 Variabili d'ambiente (in GitHub sono i "Secrets"):
   META_PAGE_TOKEN   token di accesso della Pagina Facebook (non scade)
   FB_PAGE_ID        ID della Pagina Facebook
   IG_USER_ID        ID dell'account Instagram professionale collegato alla Pagina
+  TELEGRAM_BOT_TOKEN  token del bot Telegram (da @BotFather)
+  TELEGRAM_CHAT_ID    canale/gruppo Telegram: "@nomecanale" oppure ID numerico (-100...)
+Se TELEGRAM_BOT_TOKEN e TELEGRAM_CHAT_ID sono impostati, i post senza "piattaforme"
+vanno anche su Telegram; altrimenti solo su Facebook e Instagram.
 Opzionali:
   GRAPH_VERSION     versione delle API Meta (default v25.0)
   TOLLERANZA_ORE    ritardo massimo accettato per un post in arretrato (default 6)
@@ -47,7 +52,9 @@ GRAPH = f"https://graph.facebook.com/{os.environ.get('GRAPH_VERSION', 'v25.0')}"
 TOLLERANZA = timedelta(hours=float(os.environ.get("TOLLERANZA_ORE", "6")))
 MAX_TENTATIVI = 3
 
-PIATTAFORME = ("facebook", "instagram")
+PIATTAFORME = ("facebook", "instagram", "telegram")
+TELEGRAM_ATTIVO = bool(os.environ.get("TELEGRAM_BOT_TOKEN") and os.environ.get("TELEGRAM_CHAT_ID"))
+PIATTAFORME_DEFAULT = list(PIATTAFORME) if TELEGRAM_ATTIVO else ["facebook", "instagram"]
 # Instagram accetta proporzioni tra 4:5 (verticale) e 1.91:1 (orizzontale).
 # Margine minimo per non sforare per arrotondamenti.
 IG_RAPPORTO_MIN = 0.801
@@ -55,6 +62,8 @@ IG_RAPPORTO_MAX = 1.90
 IG_LARGHEZZA_MAX = 1440
 IG_MAX_CARATTERI = 2200
 IG_MAX_HASHTAG = 30
+TG_MAX_DIDASCALIA = 1024   # oltre, il testo va in un messaggio separato dopo la foto
+TG_MAX_MESSAGGIO = 4096
 
 
 class ErroreConfig(Exception):
@@ -90,7 +99,11 @@ def parse_data(valore):
 def carica_post():
     if not FILE_POST.exists():
         raise ErroreConfig(f"File {FILE_POST.name} non trovato")
-    dati = yaml.safe_load(FILE_POST.read_text(encoding="utf-8")) or {}
+    contenuto = FILE_POST.read_text(encoding="utf-8")
+    if len(re.findall(r"(?m)^post\s*:", contenuto)) > 1:
+        raise ErroreConfig("Errori in post.yaml:\n  - la riga 'post:' compare più volte: "
+                           "deve esserci una sola volta, in cima, con tutti i post sotto")
+    dati = yaml.safe_load(contenuto) or {}
     voci = (dati.get("post") if isinstance(dati, dict) else dati) or []
 
     post, errori, visti = [], [], set()
@@ -114,19 +127,20 @@ def carica_post():
         if not testo:
             errori.append(f"{dove}: manca 'testo'")
         testo_ig = str(voce.get("testo_instagram") or testo).strip()
+        testo_tg = str(voce.get("testo_telegram") or testo).strip()
 
         if not immagine:
             errori.append(f"{dove}: manca 'immagine'")
         elif not (ROOT / immagine).is_file():
             errori.append(f"{dove}: immagine '{immagine}' non trovata nel repository")
 
-        piattaforme = voce.get("piattaforme") or list(PIATTAFORME)
+        piattaforme = voce.get("piattaforme") or list(PIATTAFORME_DEFAULT)
         if isinstance(piattaforme, str):
             piattaforme = [piattaforme]
         piattaforme = [str(p).lower().strip() for p in piattaforme]
         sconosciute = [p for p in piattaforme if p not in PIATTAFORME]
         if sconosciute:
-            errori.append(f"{dove}: piattaforme non valide {sconosciute} (ammesse: facebook, instagram)")
+            errori.append(f"{dove}: piattaforme non valide {sconosciute} (ammesse: facebook, instagram, telegram)")
 
         if "instagram" in piattaforme:
             if len(testo_ig) > IG_MAX_CARATTERI:
@@ -134,6 +148,9 @@ def carica_post():
             n_hashtag = len(re.findall(r"(?<!\w)#\w", testo_ig))
             if n_hashtag > IG_MAX_HASHTAG:
                 errori.append(f"{dove}: troppi hashtag per Instagram ({n_hashtag} > {IG_MAX_HASHTAG})")
+
+        if "telegram" in piattaforme and len(testo_tg) > TG_MAX_MESSAGGIO:
+            errori.append(f"{dove}: testo per Telegram troppo lungo ({len(testo_tg)} > {TG_MAX_MESSAGGIO} caratteri)")
 
         date_grezze = voce.get("date") or []
         if not isinstance(date_grezze, list):
@@ -151,6 +168,7 @@ def carica_post():
             "id": pid,
             "testo": testo,
             "testo_ig": testo_ig,
+            "testo_tg": testo_tg,
             "immagine": immagine,
             "piattaforme": piattaforme,
             "date": sorted(set(quando)),
@@ -333,6 +351,49 @@ def pubblica_instagram(post, cfg):
     return graph("POST", f"{cfg.ig_id}/media_publish", cfg.token, data={"creation_id": contenitore})["id"]
 
 
+# ---------------------------------------------------------------- API Telegram
+
+def telegram(metodo, token, **kwargs):
+    for tentativo in range(3):
+        try:
+            r = requests.post(f"https://api.telegram.org/bot{token}/{metodo}", timeout=120, **kwargs)
+        except requests.RequestException as e:
+            raise ErroreMeta(f"errore di rete verso Telegram: {type(e).__name__}") from None
+        try:
+            dati = r.json()
+        except ValueError:
+            raise ErroreMeta(f"risposta non valida da Telegram (HTTP {r.status_code})") from None
+        if dati.get("ok"):
+            return dati.get("result")
+        attesa = (dati.get("parameters") or {}).get("retry_after")
+        if attesa and tentativo < 2:
+            time.sleep(min(int(attesa), 60))
+            continue
+        raise ErroreMeta(f"Telegram {dati.get('error_code')}: {dati.get('description')}")
+
+
+def config_telegram():
+    token, chat = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip(), os.environ.get("TELEGRAM_CHAT_ID", "").strip()
+    if not token or not chat:
+        raise ErroreConfig("Mancano i secret TELEGRAM_BOT_TOKEN e/o TELEGRAM_CHAT_ID")
+    return token, chat
+
+
+def pubblica_telegram(post, _cfg):
+    token, chat = config_telegram()
+    testo = post["testo_tg"]
+    sorgente = ROOT / post["immagine"]
+    didascalia = testo if len(testo) <= TG_MAX_DIDASCALIA else None
+    with open(sorgente, "rb") as f:
+        foto = telegram("sendPhoto", token, data={"chat_id": chat, **({"caption": didascalia} if didascalia else {})},
+                        files={"photo": (sorgente.name, f)})
+    id_msg = foto["message_id"]
+    if didascalia is None:  # testo troppo lungo per la didascalia: segue in un messaggio a parte
+        telegram("sendMessage", token, data={"chat_id": chat, "text": testo,
+                                             "reply_to_message_id": id_msg})
+    return str(id_msg)
+
+
 # ---------------------------------------------------------------- comandi
 
 def cmd_controlla(_args):
@@ -394,7 +455,8 @@ def cmd_pubblica(args):
                 etichetta = f"{p['id']} ({quando.strftime('%d/%m %H:%M')}) su {piattaforma}"
 
                 if not da_considerare(quando, ora):
-                    print(f"::warning::{etichetta}: saltato, in ritardo di oltre {TOLLERANZA}")
+                    if ora - quando < timedelta(days=2):  # i post più vecchi si archiviano senza avvisi
+                        print(f"::warning::{etichetta}: saltato, in ritardo di oltre {TOLLERANZA}")
                     if args.prova:
                         continue
                     stato[k] = {"esito": "saltato", "il": ora_iso(), "motivo": "troppo in ritardo"}
@@ -408,8 +470,10 @@ def cmd_pubblica(args):
                 try:
                     if piattaforma == "facebook":
                         id_meta = pubblica_facebook(p, cfg)
-                    else:
+                    elif piattaforma == "instagram":
                         id_meta = pubblica_instagram(p, cfg)
+                    else:
+                        id_meta = pubblica_telegram(p, cfg)
                     stato[k] = {"esito": "ok", "il": ora_iso(), "id": id_meta}
                     pubblicati += 1
                     print(f"Pubblicato {etichetta} → {id_meta}")
@@ -447,7 +511,42 @@ def cmd_verifica(_args):
         dati = (limite.get("data") or [{}])[0]
         print(f"Post Instagram via API nelle ultime 24h: {dati.get('quota_usage')} "
               f"(limite {(dati.get('config') or {}).get('quota_total', '?')})")
+    if TELEGRAM_ATTIVO:
+        token, chat = config_telegram()
+        bot = telegram("getMe", token)
+        canale = telegram("getChat", token, data={"chat_id": chat})
+        nome = canale.get("title") or canale.get("username")
+        print(f"Telegram: bot @{bot.get('username')} → {canale.get('type')} '{nome}' (ID {canale.get('id')})")
+        membro = telegram("getChatMember", token, data={"chat_id": chat, "user_id": bot["id"]})
+        if membro.get("status") != "administrator" and canale.get("type") == "channel":
+            print("::warning::Il bot non risulta amministratore del canale: non potrà pubblicare")
+        elif membro.get("status") == "administrator" and membro.get("can_post_messages") is False:
+            print("::warning::Il bot è amministratore ma senza il permesso di pubblicare messaggi")
+    else:
+        print("Telegram: non configurato (mancano TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID)")
     print("Tutto a posto.")
+    return 0
+
+
+def cmd_telegram_id(_args):
+    token = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
+    if not token:
+        raise ErroreConfig("Manca il secret TELEGRAM_BOT_TOKEN")
+    bot = telegram("getMe", token)
+    print(f"Bot: @{bot.get('username')}")
+    aggiornamenti = telegram("getUpdates", token, data={"allowed_updates": json.dumps(
+        ["message", "channel_post", "my_chat_member"])}) or []
+    trovati = {}
+    for u in aggiornamenti:
+        for campo in ("channel_post", "message", "my_chat_member"):
+            chat = (u.get(campo) or {}).get("chat")
+            if chat and chat.get("type") != "private":
+                trovati[chat["id"]] = chat
+    if not trovati:
+        print("Nessun canale o gruppo trovato. Aggiungi il bot come amministratore, scrivi un messaggio "
+              "nel canale/gruppo e rilancia entro 24 ore.")
+    for chat in trovati.values():
+        print(f"{chat.get('type')}: '{chat.get('title')}'  →  TELEGRAM_CHAT_ID = {chat['id']}")
     return 0
 
 
@@ -460,6 +559,7 @@ def main():
     p.add_argument("--prova", action="store_true", help="mostra cosa verrebbe pubblicato senza pubblicare")
     p.set_defaults(func=cmd_pubblica)
     sotto.add_parser("verifica").set_defaults(func=cmd_verifica)
+    sotto.add_parser("telegram-id").set_defaults(func=cmd_telegram_id)
     args = parser.parse_args()
     try:
         return args.func(args)
