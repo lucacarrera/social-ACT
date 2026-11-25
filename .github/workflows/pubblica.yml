@@ -32,6 +32,9 @@ jobs:
       MODALITA: ${{ inputs.modalita || 'pubblica' }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          # sempre l'ultima versione (stato aggiornato), anche se l'esecuzione è rimasta in coda
+          ref: ${{ github.ref_name }}
 
       - uses: actions/setup-python@v5
         with:
@@ -61,7 +64,12 @@ jobs:
           git add media/instagram
           if ! git diff --cached --quiet; then
             git commit -m "Immagini Instagram preparate"
-            git pull --rebase && git push || { sleep 5; git pull --rebase && git push; }
+            ok=0
+            for i in 1 2 3; do
+              if git pull --rebase; then git push && { ok=1; break; }; else git rebase --abort; fi
+              sleep 5
+            done
+            [ "$ok" = 1 ]
           fi
           echo "URL_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
 
@@ -81,5 +89,10 @@ jobs:
           git add stato
           if ! git diff --cached --quiet; then
             git commit -m "Aggiorna stato pubblicazioni"
-            git pull --rebase && git push || { sleep 5; git pull --rebase && git push; }
+            ok=0
+            for i in 1 2 3; do
+              if git pull --rebase; then git push && { ok=1; break; }; else git rebase --abort; fi
+              sleep 5
+            done
+            [ "$ok" = 1 ]
           fi
