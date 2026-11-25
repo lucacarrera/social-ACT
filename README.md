@@ -1,4 +1,4 @@
-# Pubblicazione automatica su Facebook e Instagram
+# Pubblicazione automatica su Facebook, Instagram e Telegram
 
 Pubblica testo + locandina sulla Pagina Facebook e sull'account Instagram collegato,
 alle date e orari scritti in `post.yaml`. Gira gratis su GitHub Actions ogni 15 minuti:
@@ -74,6 +74,21 @@ Scheda **Actions** → "Pubblica post" → **Run workflow**:
 - `pubblica`: pubblica davvero i post arrivati all'orario (è quello che succede in automatico ogni 15 minuti).
 
 Per un primo test reale: aggiungi un post con data/ora di qualche minuto fa e lancia `pubblica`.
+
+## Telegram (facoltativo)
+
+1. Su Telegram apri **@BotFather**, invia `/newbot`, scegli nome e username: ricevi il **token** del bot.
+2. Nel canale (o gruppo): Amministratori → Aggiungi amministratore → cerca il bot →
+   lascia attivo **"Pubblica messaggi"**.
+3. Secret su GitHub: `TELEGRAM_BOT_TOKEN` = token del bot;
+   `TELEGRAM_CHAT_ID` = `@nomecanale` se il canale è pubblico, altrimenti l'ID numerico:
+   scrivi un messaggio nel canale, poi Actions → Run workflow → **telegram-id**, e copia l'ID (-100...).
+4. Run workflow → **verifica**: deve mostrare anche il canale Telegram.
+
+Con Telegram configurato, i post senza `piattaforme` escono su Facebook, Instagram e Telegram.
+Per escluderlo: `piattaforme: [facebook, instagram]`. Testo diverso: campo `testo_telegram: |`.
+Su Telegram la didascalia della foto ha un limite di 1024 caratteri: se il testo è più lungo,
+la locandina esce senza didascalia e il testo segue subito dopo come messaggio.
 
 ## Note
 
