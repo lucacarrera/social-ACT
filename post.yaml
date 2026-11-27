@@ -15,60 +15,31 @@
 # I post usciti si vedono in stato/pubblicati.json. Non serve cancellare i post vecchi.
 
 post:
-  - id: pasta-fresca-pasta-ripiena
+  - id: finger-food
     testo: |
-      Tutti con le mani in "pasta", assieme al nostro chef, per imparare a preparare tagliatelle, farfalle, orecchiette, pasta ripiena creativa.
-      Solo pochi posti ancora disponibili!
- 
-      Giovedì 19 e 26 novembre, dalle 19.30 alle 22.30.
+      Le festività sono alle porte e l'aperitivo è il vero biglietto da visita di ogni cena o pranzo in compagnia.
+      In questo corso pratico di due lezioni imparerai a realizzare veri e propri finger food d'effetto.
 
-      Al termine della lezione ci sarà la degustazione dei piatti preparati.
+      Il corso è pensato per chi ama cucinare e vuole portare in tavola qualcosa di originale, pratico e goloso.
 
-      Per informazioni o iscrizione contattare la segreteria al n. 335 1841388 o via email all'indirizzo segreteria@cuochitorino.it o visitare la pagina https://cuochitorino.it/product/corso-di-pasta-fresca-e-ripiena/
-    immagine: locandine/la_pasta_fresca_e_la_pasta_ripiena_p45.png
-    date:
-      - "2026-11-17 16:15"
+      📅 Quando: 10 e 17 dicembre
+      📍 Dove: Via Bogino 17, Torino
 
-  - id: cioccolato
-    testo: |
-      Vuoi scoprire i segreti del cioccolato? 🍫
-      Affrettati! Il nostro corso di due lezioni, comincia domani!
+      👉 Per info su costi, programma completo e iscrizioni contattaci al numero 011.6991768 o scrivi a segreteria@cuochitorino.it
 
-      Imparerai le tecniche di base, dal temperaggio alla cristallizzazione fino alla modellazione.
-
-      #cioccolato #corsodicucina #cuochitorino
-    immagine: locandine/il_cioccolato_p45.png
-    date:
-      - "2026-11-16 07:20"
-
-  - id: corso-cucina-professionale
-    testo: |
-      Hai sempre sognato di lavorare in una cucina professionale? 🔥
-
-      A gennaio ripartono i nostri Corsi di Cucina Professionale: 9 settimane con le mani in pasta, in brigata, al fianco degli chef dell'Associazione Cuochi Torino.
-
-      Lavori, studi o hai il weekend libero? Abbiamo pensato a tutti, con tre edizioni:
-      ▪️ Pomeridiana: mar e gio 14.00–17.30, dal 26 gennaio
-      ▪️ Serale: lun e mer 19.00–22.30, dal 25 gennaio
-      ▪️ Sabato: 9.00–14.00, dal 23 gennaio
-
-      I posti sono limitati: scrivici o chiamaci per informazioni e iscrizioni
-      📞 335 184 1388 · ✉️ segreteria@cuochitorino.it
-      📍 Via Bogino 17, Torino
-
-      #cucinaprofessionale #diventarecuoco #corsodicucina #Torino #AssociazioneCuochiTorino
+      #FingerFood #CorsoDiCucina #AperitivoDelleFeste #IdeeNatale #CapodannoInTavola #CucinaCreativa
     testo_instagram: |
-      Corso di Cucina Professionale – Gennaio 2027 👨‍🍳
-      9 settimane di pratica in brigata con i nostri chef.
-      Scegli la tua edizione: pomeridiana, serale o sabato.
+      Le festività sono alle porte e l'aperitivo è il vero biglietto da visita di ogni cena o pranzo in compagnia!
 
-      Info e iscrizioni: 335 184 1388 · segreteria@cuochitorino.it
-      📍 Via Bogino 17, Torino
+      👉 Per info su costi, programma completo e iscrizioni contattaci al numero 011.6991768 o scrivi a segreteria@cuochitorino.it
 
-      #cucinaprofessionale #corsodicucina #Torino #AssociazioneCuochiTorino
-    immagine: locandine/corso_professionale_2027_B_solo_edizioni_p45.png
+      #FingerFood #CorsoDiCucina #AperitivoDelleFeste #IdeeNatale #CapodannoInTavola #CucinaCreativa
+    immagine: locandine/il_finger_food_p45.png
     date:
-      - "2026-11-13 07:30"
-      - "2026-11-15 11:30"
-      - "2026-11-19 16:30"
-
+      - "2026-11-27 17:00"
+      - "2026-11-29 08:30"
+      - "2026-12-02 16:30"
+      - "2026-12-04 12:30"
+      - "2026-12-05 07:30"
+      - "2026-12-06 11:30"
+      - "2026-12-06 21:30"
